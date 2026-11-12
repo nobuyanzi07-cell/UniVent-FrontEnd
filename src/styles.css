@@ -76,6 +76,11 @@ a {
   font-weight: 600;
 }
 
+.site-nav a:hover,
+.route-switch a {
+  color: var(--green);
+}
+
 .nav-action,
 .primary-action {
   border-radius: 7px;
@@ -209,6 +214,38 @@ h2 {
   line-height: 1.7;
 }
 
+.route-placeholder {
+  display: flex;
+  min-height: 460px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 72px 9%;
+  background: #edf1e8;
+}
+
+.route-placeholder h1 {
+  font-size: clamp(38px, 5vw, 56px);
+}
+
+.route-placeholder > p:not(.eyebrow) {
+  max-width: 520px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.route-placeholder .route-switch {
+  font-size: 14px;
+}
+
+.route-switch a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .site-footer {
   min-height: 76px;
   justify-content: space-between;
@@ -240,11 +277,12 @@ h2 {
   }
 
   .site-nav {
-    gap: 14px;
+    gap: 12px;
     font-size: 13px;
   }
 
-  .site-nav > a:first-child {
+  .site-nav > a:nth-child(2),
+  .site-nav > a:nth-child(3) {
     display: none;
   }
 
@@ -268,6 +306,11 @@ h2 {
 
   .intro {
     padding: 76px 10px;
+  }
+
+  .route-placeholder {
+    min-height: 420px;
+    padding: 56px 8%;
   }
 }
 
