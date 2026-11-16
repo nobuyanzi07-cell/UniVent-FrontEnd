@@ -25,14 +25,16 @@ function App() {
   );
 }
 
-export default App;import Navbar from "./components/Navbar";
-import Auth from "./pages/Auth";
+export default App;
 
-export default function App() {
-  return (
-    <div>
-      <Navbar />
-      <Auth />
-    </div>
-  );
-}
+// //import Navbar from "./components/Navbar";
+// import Auth from "./pages/Auth";
+
+// export default function App() {
+//   return (
+//     <div>
+//       <Navbar />
+//       <Auth />
+//     </div>
+//   );
+// }
