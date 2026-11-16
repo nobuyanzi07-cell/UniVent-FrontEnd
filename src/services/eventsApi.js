@@ -1,5 +1,9 @@
+import { mockEvents } from './mockEvents';
+
 const BASE_URL = 'https://app.ticketmaster.com/discovery/v2';
-const KEY = import.meta.env.VITE_TM_API_KEY;
+const API_KEY = import.meta.env.VITE_TM_API_KEY;
+const USE_MOCK = !API_KEY;
+
 
 async function request(path, params = {}) {
   const url = new URL(`${BASE_URL}${path}`);
@@ -7,7 +11,14 @@ async function request(path, params = {}) {
   Object.entries(params).forEach(([k, v]) => {
     if (v) url.searchParams.set(k, v);
   });
-  const res = await fetch(url);
+    let res;
+  try {
+    res = await fetch(url);
+  } catch {
+    const err = new Error('Network error');
+    err.status = 0;
+    throw err;
+  }
   if (!res.ok) {
     const err = new Error('Request failed');
     err.status = res.status;
@@ -16,7 +27,26 @@ async function request(path, params = {}) {
   return res.json();
 }
 
-export const searchEvents = ({ keyword, city, page = 0, size = 20 }) =>
-  request('/events.json', { keyword, city, page, size });
+export async function searchEvents({ keyword, city, page = 0, size = 20 } = {}) {
+  if (USE_MOCK) {
+    const k = keyword?.toLowerCase();
+    return mockEvents.filter((e) => !k || e.name.toLowerCase().includes(k));
+  }
+  const data = await request('/events.json', { keyword, city, page, size });
+  return (data._embedded?.events ?? []).map(mapEvent);
+}
 
-export const getEventById = (id) => request(`/events/${id}.json`);
+export async function getEventById(id) {
+  if (USE_MOCK) {
+
+    const found = mockEvents.find((e) => e.id === id);
+    if (!found) {
+      const err = new Error('Event not found');
+      err.status = 404;
+      throw err;
+    }
+    return found;
+  }
+  const data = await request(`/events/${id}.json`);
+  return mapEvent(data);
+}
