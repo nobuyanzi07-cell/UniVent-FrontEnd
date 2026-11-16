@@ -1,4 +1,46 @@
+import { useMemo, useState } from "react";
+import ErrorMessage from "../Components/ErrorMessage.jsx";
+import EventList from "../Components/EventList.jsx";
+import Filters from "../Components/Filters.jsx";
+import Loader from "../Components/Loader.jsx";
+import SearchBar from "../Components/SearchBar.jsx";
+import { useEvents } from "../hooks/useEvents";
+
+const defaultFilters = { category: "", freeOnly: false, sort: "date-asc" };
+
 function Browse() {
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState(defaultFilters);
+  const { events, loading, error, refetch } = useEvents({ keyword: query });
+
+  const setFilter = (key, value) =>
+    setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const categories = useMemo(
+    () => [...new Set(events.map((e) => e.category).filter(Boolean))].sort(),
+    [events]
+  );
+
+  const visible = useMemo(() => {
+    const list = events.filter((e) => {
+      if (filters.category && e.category !== filters.category) return false;
+      if (filters.freeOnly && e.priceMax !== 0) return false;
+      return true;
+    });
+
+    list.sort((a, b) => {
+      if (filters.sort === "name") return a.name.localeCompare(b.name);
+      const diff = (a.startDate ?? "").localeCompare(b.startDate ?? "");
+      return filters.sort === "date-desc" ? -diff : diff;
+    });
+    return list;
+  }, [events, filters]);
+
+  const reset = () => {
+    setQuery("");
+    setFilters(defaultFilters);
+  };
+
   return (
     <>
       <section className="hero" id="events">
@@ -17,13 +59,22 @@ function Browse() {
         </div>
       </section>
 
-      <section className="intro" id="get-started">
+      <section className="browse" id="get-started">
         <p className="eyebrow">Your campus, your calendar</p>
         <h2>There’s more happening around you.</h2>
-        <p>
-          UniVent brings student events, clubs, and campus communities together.
-          Check back soon to see what’s on.
-        </p>
+
+        <SearchBar value={query} onChange={setQuery} />
+        <Filters
+          filters={filters}
+          categories={categories}
+          onChange={setFilter}
+          onReset={reset}
+          count={visible.length}
+        />
+
+        {loading && <Loader />}
+        {!loading && error && <ErrorMessage error={error} onRetry={refetch} />}
+        {!loading && !error && <EventList events={visible} />}
       </section>
     </>
   );
