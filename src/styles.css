@@ -449,3 +449,7 @@ h2 {
 .btn.ghost { background: transparent; color: #7c5cff; border: 1px solid #7c5cff; }
 .loader, .empty { color: #666; }
 .error-message { background: #fff3f3; border: 1px solid #f3c2c2; padding: 1rem; border-radius: 8px; }
+
+html { scroll-behavior: smooth; }
+#get-started { scroll-margin-top: 90px; }
+.site-nav a.active:not(.nav-action) { color: #236b4e; border-bottom: 2px solid #236b4e; }
