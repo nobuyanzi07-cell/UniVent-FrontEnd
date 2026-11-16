@@ -11,7 +11,14 @@ async function request(path, params = {}) {
   Object.entries(params).forEach(([k, v]) => {
     if (v) url.searchParams.set(k, v);
   });
-  const res = await fetch(url);
+    let res;
+  try {
+    res = await fetch(url);
+  } catch {
+    const err = new Error('Network error');
+    err.status = 0;
+    throw err;
+  }
   if (!res.ok) {
     const err = new Error('Request failed');
     err.status = res.status;
@@ -31,6 +38,7 @@ export async function searchEvents({ keyword, city, page = 0, size = 20 } = {}) 
 
 export async function getEventById(id) {
   if (USE_MOCK) {
+
     const found = mockEvents.find((e) => e.id === id);
     if (!found) {
       const err = new Error('Event not found');

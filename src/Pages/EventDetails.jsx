@@ -1,5 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useEvent } from "../hooks/useEvent";
+import { getErrorInfo } from "../services/errorMessages";
+
 
 function formatDate(date, time) {
   if (!date) return "Date to be announced";
@@ -43,30 +45,21 @@ function EventDetails() {
     );
   }
 
-  if (error && error.status !== 404) {
+    if (error || !event) {
+    const info = getErrorInfo(error ?? { status: 404 });
     return (
       <div role="alert" className="mx-auto max-w-md p-6 text-center">
-        <p className="mb-4 text-red-700">
-          Something went wrong while loading this event.
-        </p>
-        <button
-          type="button"
-          onClick={refetch}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (error || !event) {
-    return (
-      <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="mb-2 text-xl font-semibold">Event not found</h1>
-        <p className="mb-4 text-gray-600">
-          We couldn't find an event with that ID.
-        </p>
+        <h1 className="mb-2 text-xl font-semibold">{info.title}</h1>
+        <p className="mb-4 text-gray-600">{info.message}</p>
+        {info.canRetry && (
+          <button
+            type="button"
+            onClick={refetch}
+            className="mr-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        )}
         <Link to="/" className="text-blue-600 underline">
           Back to Browse
         </Link>
