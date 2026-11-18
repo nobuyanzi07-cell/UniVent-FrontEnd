@@ -453,3 +453,4 @@ h2 {
 html { scroll-behavior: smooth; }
 #get-started { scroll-margin-top: 90px; }
 .site-nav a.active:not(.nav-action) { color: #236b4e; border-bottom: 2px solid #236b4e; }
+.btn.saved { background: #236b4e; color: #fff; border-color: #236b4e; }
