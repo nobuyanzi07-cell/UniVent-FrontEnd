@@ -1,23 +1,28 @@
-import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import Auth from "./Auth";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it } from "vitest";
+import Auth from "./Auth.jsx";
+
+function renderAuth(url = "/auth") {
+  return render(
+    <MemoryRouter initialEntries={[url]}>
+      <Auth />
+    </MemoryRouter>
+  );
+}
 
 describe("Auth page", () => {
   it("shows the login form by default", () => {
-    render(<Auth />);
-
-    expect(
-      screen.getByRole("heading", { name: /welcome back/i })
-    ).toBeInTheDocument();
+    renderAuth("/auth");
+    expect(screen.getByRole("heading", { name: /log in/i })).toBeInTheDocument();
   });
 
-  it("switches to signup form", () => {
-    render(<Auth />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
-
+  it("switches to signup form", async () => {
+    renderAuth("/auth");
+    await userEvent.click(screen.getByRole("link", { name: /sign up/i }));
     expect(
-      screen.getByRole("heading", { name: /create account/i })
+      screen.getByRole("heading", { name: /create your account/i })
     ).toBeInTheDocument();
   });
 });
