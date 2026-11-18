@@ -1,31 +1,9 @@
-import { useState, useEffect } from "react";
-
-const STORAGE_KEY = "savedEvents";
+import { Link } from "react-router-dom";
+import EventCard from "../Components/EventCard.jsx";
+import { useSavedEvents } from "../context/SavedEventsContext.jsx";
 
 function SavedEvents() {
-  const [saved, setSaved] = useState(() => {
-    if (typeof window === "undefined") {
-      return [];
-    }
-
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error("Failed to parse saved events:", error);
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-    }
-  }, [saved]);
-
-  const removeSavedEvent = (id) => {
-    setSaved((prev) => prev.filter((event) => String(event.id) !== String(id)));
-  };
+  const { saved } = useSavedEvents();
 
   return (
     <section className="saved-events-page">
@@ -38,39 +16,14 @@ function SavedEvents() {
       {saved.length === 0 ? (
         <div className="saved-events-empty">
           <p>No saved events yet.</p>
-          <a className="primary-action" href="/">
+          <Link className="primary-action" to="/">
             Browse events <span aria-hidden="true">→</span>
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="saved-events-grid">
-          {saved.map((event, index) => (
-            <article className="saved-event-card" key={event.id ?? `${event.name ?? "event"}-${index}`}>
-              <div className="saved-event-card__header">
-                <span className="saved-event-tag">
-                  {event.category ?? "Event"}
-                </span>
-                <button
-                  type="button"
-                  className="saved-event-remove"
-                  onClick={() => removeSavedEvent(event.id)}
-                >
-                  Remove
-                </button>
-              </div>
-
-              <h2>{event.name ?? event.title ?? "Untitled event"}</h2>
-              <p className="saved-event-meta">
-                {event.date ?? "Date TBD"}
-              </p>
-              <p className="saved-event-meta">
-                {event.location ?? "Location TBD"}
-              </p>
-
-              {event.description ? (
-                <p className="saved-event-description">{event.description}</p>
-              ) : null}
-            </article>
+          {saved.map((event) => (
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
       )}
