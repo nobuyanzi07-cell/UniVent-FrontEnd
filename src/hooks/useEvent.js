@@ -2,37 +2,35 @@ import { useState, useEffect, useCallback } from 'react';
 import { getEventById } from '../services/eventsApi';
 
 export function useEvent(id) {
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [result, setResult] = useState({ key: null, event: null, error: null });
   const [reloadCount, setReloadCount] = useState(0);
+
+  const requestKey = `${id}|${reloadCount}`;
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
     getEventById(id)
-      .then((data) => {
-        if (!cancelled) setEvent(data);
+      .then((event) => {
+        if (!cancelled) setResult({ key: requestKey, event, error: null });
       })
-      .catch((err) => {
-        if (!cancelled) {
-          setEvent(null);
-          setError(err);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+      .catch((error) => {
+        if (!cancelled) setResult({ key: requestKey, event: null, error });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [id, reloadCount]);
+  }, [id, requestKey]);
 
+  const loading = Boolean(id) && result.key !== requestKey;
   const refetch = useCallback(() => setReloadCount((c) => c + 1), []);
 
-  return { event, loading, error, refetch };
+  return {
+    event: loading ? null : result.event,
+    loading,
+    error: loading ? null : result.error,
+    refetch,
+  };
 }

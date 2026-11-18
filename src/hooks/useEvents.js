@@ -2,30 +2,23 @@ import { useState, useEffect, useCallback } from 'react';
 import { searchEvents } from '../services/eventsApi';
 
 export function useEvents({ keyword = '' } = {}) {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [result, setResult] = useState({ key: null, events: [], error: null });
   const [reloadCount, setReloadCount] = useState(0);
+
+  const term = keyword.trim();
+  const requestKey = `${term}|${reloadCount}`;
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
     // Debounce so we don't fetch on every keystroke
     const timer = setTimeout(() => {
-      searchEvents({ keyword: keyword.trim() })
-        .then((data) => {
-          if (!cancelled) setEvents(data);
+      searchEvents({ keyword: term })
+        .then((events) => {
+          if (!cancelled) setResult({ key: requestKey, events, error: null });
         })
-        .catch((err) => {
-          if (!cancelled) {
-            setEvents([]);
-            setError(err);
-          }
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
+        .catch((error) => {
+          if (!cancelled) setResult({ key: requestKey, events: [], error });
         });
     }, 300);
 
@@ -33,9 +26,15 @@ export function useEvents({ keyword = '' } = {}) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [keyword, reloadCount]);
+  }, [term, requestKey]);
 
+  const loading = result.key !== requestKey;
   const refetch = useCallback(() => setReloadCount((c) => c + 1), []);
 
-  return { events, loading, error, refetch };
+  return {
+    events: result.events,
+    loading,
+    error: loading ? null : result.error,
+    refetch,
+  };
 }

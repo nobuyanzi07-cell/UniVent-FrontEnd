@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useSavedEvents } from "../context/SavedEventsContext.jsx";
 
 function formatDate(startDate, startTime) {
   if (!startDate) return "Date to be announced";
@@ -25,6 +26,9 @@ function priceLabel({ priceMin, priceMax, currency }) {
 }
 
 function EventCard({ event }) {
+  const { isSaved, toggleSaved } = useSavedEvents();
+  const saved = isSaved(event.id);
+
   return (
     <article className="event-card">
       {event.imageUrl ? (
@@ -52,6 +56,14 @@ function EventCard({ event }) {
           <Link to={`/events/${event.id}`} className="btn ghost">
             Details
           </Link>
+          <button
+            type="button"
+            className={saved ? "btn saved" : "btn"}
+            aria-pressed={saved}
+            onClick={() => toggleSaved(event)}
+          >
+            {saved ? "Saved ✓" : "Save"}
+          </button>
         </div>
       </div>
     </article>
