@@ -6,124 +6,56 @@ UniVent helps students across Nairobi's universities discover and attend campus 
 
 Install dependencies and start the local development server:
 
-```sh
+```bash
 npm install
 npm run dev
 ```
 
-The app is built with React and Vite.
+The app is built with React and Vite. Run `npm run build` to create a production build, or `npm run preview` to serve that build locally.
 
-To create a production build:
+Other scripts:
 
-```sh
-npm run build
+```bash
+npm run lint   # ESLint
+npm test       # Vitest
 ```
 
-To preview the production build locally:
+## Environment
 
-```sh
-npm run preview
-```
+Events come from mock data by default. To use the Ticketmaster API, copy `.env.example` to `.env` and set `VITE_TM_API_KEY`. Never commit `.env`.
 
 ## Routes
 
 | Path | Page |
 | --- | --- |
-| `/` | Browse events |
+| `/` | Browse |
 | `/events/:id` | Event details |
 | `/saved` | Saved events |
 | `/create` | Create event preview |
 | `/auth` | Login |
 | `/auth?mode=signup` | Sign up |
 
-## Create Event Preview
-
-The `/create` page provides a frontend preview of the event creation experience.
-
-Users can enter:
-
-- Event name
-- Category
-- Description
-- Date
-- Time
-- Venue
-- City
-- Price
-- Event image URL
-
-The page includes client-side validation and a live event preview that updates as information is entered.
-
-The current Create Event implementation is a frontend preview only. It does not submit event data to a backend API.
-
 ## Project structure
 
 ```text
 src/
   Components/       # Shared UI components
-  Pages/            # Individual route page components
-  components/       # Additional reusable components
-  pages/            # Additional page components
-  hooks/             # Custom React hooks
-  routing/           # React Router route definitions
-  services/         # API and event-related services
-  test/              # Test setup
-  App.jsx            # Main application component
-  main.jsx           # React entry point
+  Pages/            # Route page components
+  context/          # Saved events provider
+  hooks/            # Custom React hooks
+  routing/          # React Router route definitions
+  services/         # API and mock event data
+  test/             # Test setup
+  App.jsx           # Shared layout (NavBar, routes, footer)
+  main.jsx          # React entry point
   styles.css        # Global styles
 
-index.html           # Vite HTML entry
-vite.config.js       # Vite configuration
-package.json         # Project dependencies and scripts
+index.html          # Vite HTML entry
+vite.config.js      # Vite configuration
+vercel.json         # SPA rewrites for deployment
+package.json        # Dependencies and scripts
 ```
 
-## Event Preview Features
+## Deployment
 
-The Create Event preview supports:
-
-- Required-field validation
-- Validation error messages
-- Live preview of event information
-- Event category display
-- Free or paid event display
-- Date and time formatting
-- Venue and city display
-- Event description preview
-- Image URL preview
-- Reset functionality
-- Responsive desktop and mobile layout
-- Successful validation state
-
-## Technology
-
-- React
-- Vite
-- React Router
-- CSS
-- JavaScript
-
-## Development
-
-Start the development server with:
-
-```sh
-npm run dev
-```
-
-Then open the local URL provided by Vite in your browser.
-
-Before committing changes, check the repository status:
-
-```sh
-git status
-```
-
-Build the application to check for production build errors:
-
-```sh
-npm run build
-```
-
-## Contribution
-
-UniVent is developed collaboratively. Contributors should work on their assigned feature branches and submit pull requests for review before changes are merged into the main branch.
+The site is deployed on Vercel. `vercel.json` rewrites all routes to `index.html` so deep links like `/saved` work on refresh.
