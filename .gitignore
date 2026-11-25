@@ -35,3 +35,8 @@ coverage/
 *.tmp
 *.log
 *.zip
+
+# Python backend
+backend/venv/
+__pycache__/
+*.db
