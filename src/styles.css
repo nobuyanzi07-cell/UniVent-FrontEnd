@@ -482,3 +482,17 @@ html { scroll-behavior: smooth; }
 .btn { display: inline-block; background: var(--green); color: #fff; border: 1px solid var(--green); padding: .5rem .9rem; border-radius: 6px; cursor: pointer; text-decoration: none; font: inherit; }
 .btn.ghost { background: transparent; color: var(--green); }
 .btn.saved { background: #194f38; border-color: #194f38; }
+
+.auth-page { max-width: 440px; margin: 0 auto; padding: 56px 0 72px; }
+.auth-card { padding: 28px; background: #fff; border: 1px solid #e8eae4; border-radius: 12px; }
+.auth-card h2 { margin: 0 0 20px; font-family: "Manrope", sans-serif; font-size: 28px; letter-spacing: -0.8px; }
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.auth-field { display: flex; flex-direction: column; gap: 6px; }
+.auth-field label { font-size: 13px; font-weight: 700; }
+.auth-field input { padding: 12px 14px; border: 1px solid #cdd3c9; border-radius: 7px; background: #fff; font: inherit; }
+.auth-field input:focus { outline: 2px solid var(--green); outline-offset: 1px; border-color: var(--green); }
+.auth-submit { margin-top: 4px; padding: 13px 18px; border: 0; border-radius: 7px; background: var(--green); color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background-color 150ms ease; }
+.auth-submit:hover { background: #194f38; }
+.auth-note { margin: 16px 0 0; color: var(--muted); font-size: 13px; }
+.auth-switch { margin: 12px 0 0; font-size: 14px; }
+.auth-switch button { padding: 0; border: 0; background: none; color: var(--green); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
