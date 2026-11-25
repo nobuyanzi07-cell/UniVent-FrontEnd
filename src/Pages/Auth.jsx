@@ -1,29 +1,42 @@
-import { Link, useSearchParams } from "react-router-dom";
-import PlaceholderPage from "./PlaceholderPage.jsx";
+import { useSearchParams } from "react-router-dom";
+import LoginForm from "../Components/LoginForm.jsx";
+import SignupForm from "../Components/SignupForm.jsx";
 
-function Auth() {
-  const [searchParams] = useSearchParams();
-  // The query string selects which authentication placeholder to show.
-  const isSignup = searchParams.get("mode") === "signup";
+export default function Auth() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  // /auth shows login, /auth?mode=signup shows signup
+  const isLogin = searchParams.get("mode") !== "signup";
+
+  const showLogin = () => setSearchParams({});
+  const showSignup = () => setSearchParams({ mode: "signup" });
 
   return (
-    <>
-      <PlaceholderPage
-        title={isSignup ? "Create your account" : "Log in"}
-        description={
-          isSignup
-            ? "Sign-up is coming soon. This page is a preview."
-            : "Login is coming soon. This page is a preview."
-        }
-      />
-      <p className="route-switch">
-        {isSignup ? "Already have an account?" : "New to UniVent?"}{" "}
-        <Link to={isSignup ? "/auth" : "/auth?mode=signup"}>
-          {isSignup ? "Log in" : "Sign up"}
-        </Link>
+    <main className="auth-page">
+      <p className="eyebrow">UniVent</p>
+
+      {isLogin ? <LoginForm /> : <SignupForm />}
+
+      <p className="auth-note">
+        Accounts aren’t live yet, so this form is a preview.
       </p>
-    </>
+
+      <p className="auth-switch">
+        {isLogin ? (
+          <>
+            Don’t have an account?{" "}
+            <button type="button" onClick={showSignup}>
+              Sign up
+            </button>
+          </>
+        ) : (
+          <>
+            Already have an account?{" "}
+            <button type="button" onClick={showLogin}>
+              Log in
+            </button>
+          </>
+        )}
+      </p>
+    </main>
   );
 }
-
-export default Auth;

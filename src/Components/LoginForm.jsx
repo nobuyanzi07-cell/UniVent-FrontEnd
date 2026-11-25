@@ -1,31 +1,41 @@
 import { useState } from "react";
-import LoginForm from "../components/LoginForm";
-import SignupForm from "../components/SignupForm";
 
-export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+export default function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
 
   return (
-    <main>
-      {isLogin ? <LoginForm /> : <SignupForm />}
-
-      <div>
-        {isLogin ? (
-          <p>
-            Don&apos;t have an account?{" "}
-            <button type="button" onClick={() => setIsLogin(false)}>
-              Sign up
-            </button>
-          </p>
-        ) : (
-          <p>
-            Already have an account?{" "}
-            <button type="button" onClick={() => setIsLogin(true)}>
-              Log in
-            </button>
-          </p>
-        )}
-      </div>
-    </main>
+    <div className="auth-card">
+      <h2>Welcome back</h2>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="auth-field">
+          <label htmlFor="login-email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="auth-field">
+          <label htmlFor="login-password">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit" className="auth-submit">
+          Log in
+        </button>
+      </form>
+    </div>
   );
 }

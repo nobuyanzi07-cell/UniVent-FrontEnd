@@ -10,10 +10,10 @@ export default function SignupForm() {
   };
 
   return (
-    <div>
+    <div className="auth-card">
       <h2>Create account</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="auth-field">
           <label htmlFor="signup-name">Full Name</label>
           <input
             id="signup-name"
@@ -23,7 +23,7 @@ export default function SignupForm() {
             required
           />
         </div>
-        <div>
+        <div className="auth-field">
           <label htmlFor="signup-email">Email</label>
           <input
             id="signup-email"
@@ -33,7 +33,7 @@ export default function SignupForm() {
             required
           />
         </div>
-        <div>
+        <div className="auth-field">
           <label htmlFor="signup-password">Password</label>
           <input
             id="signup-password"
@@ -43,7 +43,9 @@ export default function SignupForm() {
             required
           />
         </div>
-        <button type="submit">Create Account</button>
+        <button type="submit" className="auth-submit">
+          Create Account
+        </button>
       </form>
     </div>
   );
