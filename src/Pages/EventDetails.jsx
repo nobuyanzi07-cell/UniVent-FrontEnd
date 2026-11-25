@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
+import { useSavedEvents } from "../context/SavedEventsContext.jsx";
 import { useEvent } from "../hooks/useEvent";
 import { getErrorInfo } from "../services/errorMessages";
-
 
 function formatDate(date, time) {
   if (!date) return "Date to be announced";
@@ -36,69 +36,63 @@ function getMapUrl(event) {
 function EventDetails() {
   const { id } = useParams();
   const { event, loading, error, refetch } = useEvent(id);
+  const { isSaved, toggleSaved } = useSavedEvents();
 
   if (loading) {
     return (
-      <p role="status" className="p-6 text-center text-gray-600">
+      <p role="status" className="details-status">
         Loading event...
       </p>
     );
   }
 
-    if (error || !event) {
+  if (error || !event) {
     const info = getErrorInfo(error ?? { status: 404 });
     return (
-      <div role="alert" className="mx-auto max-w-md p-6 text-center">
-        <h1 className="mb-2 text-xl font-semibold">{info.title}</h1>
-        <p className="mb-4 text-gray-600">{info.message}</p>
-        {info.canRetry && (
-          <button
-            type="button"
-            onClick={refetch}
-            className="mr-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        )}
-        <Link to="/" className="text-blue-600 underline">
-          Back to Browse
-        </Link>
+      <div role="alert" className="details-error">
+        <h1>{info.title}</h1>
+        <p>{info.message}</p>
+        <div className="details-actions">
+          {info.canRetry && (
+            <button type="button" className="details-btn" onClick={refetch}>
+              Retry
+            </button>
+          )}
+          <Link to="/" className="details-btn ghost">
+            Back to Browse
+          </Link>
+        </div>
       </div>
     );
   }
 
   const mapUrl = getMapUrl(event);
+  const saved = isSaved(event.id);
 
   return (
-    <article className="mx-auto max-w-3xl p-4">
-      <Link to="/" className="mb-4 inline-block text-blue-600 underline">
+    <article className="details-page">
+      <Link to="/" className="details-back">
         ← Back to Browse
       </Link>
 
       {event.imageUrl ? (
-        <img
-          src={event.imageUrl}
-          alt={event.name}
-          className="mb-4 h-64 w-full rounded object-cover"
-        />
+        <img className="details-image" src={event.imageUrl} alt={event.name} />
       ) : (
-        <div className="mb-4 flex h-64 w-full items-center justify-center rounded bg-gray-200 text-gray-500">
-          No image available
-        </div>
+        <div className="details-image placeholder" aria-hidden="true" />
       )}
 
-      <h1 className="mb-1 text-2xl font-bold">{event.name}</h1>
-      {event.category && (
-        <p className="mb-4 text-sm text-gray-500">{event.category}</p>
-      )}
+      <header className="details-header">
+        {event.category && <p className="eyebrow">{event.category}</p>}
+        <h1>{event.name}</h1>
+      </header>
 
-      <dl className="mb-4 space-y-2">
+      <dl className="details-list">
         <div>
-          <dt className="font-semibold">Date</dt>
+          <dt>Date</dt>
           <dd>{formatDate(event.startDate, event.startTime)}</dd>
         </div>
         <div>
-          <dt className="font-semibold">Venue</dt>
+          <dt>Venue</dt>
           <dd>
             {[event.venueName, event.city, event.country]
               .filter(Boolean)
@@ -106,20 +100,30 @@ function EventDetails() {
           </dd>
         </div>
         <div>
-          <dt className="font-semibold">Price</dt>
+          <dt>Price</dt>
           <dd>{formatPrice(event.priceMin, event.priceMax, event.currency)}</dd>
         </div>
       </dl>
 
-      {event.description && <p className="mb-4">{event.description}</p>}
+      {event.description && (
+        <p className="details-description">{event.description}</p>
+      )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="details-actions">
+        <button
+          type="button"
+          className={saved ? "details-btn saved" : "details-btn"}
+          aria-pressed={saved}
+          onClick={() => toggleSaved(event)}
+        >
+          {saved ? "Saved ✓" : "Save event"}
+        </button>
         {event.ticketUrl && (
           <a
             href={event.ticketUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="details-btn ghost"
           >
             Get tickets
           </a>
@@ -129,7 +133,7 @@ function EventDetails() {
             href={mapUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded border border-blue-600 px-4 py-2 text-blue-600 hover:bg-blue-50"
+            className="details-btn ghost"
           >
             View on map
           </a>
