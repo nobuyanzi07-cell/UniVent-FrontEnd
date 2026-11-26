@@ -12,6 +12,12 @@ vi.mock("../services/eventsApi", async (importOriginal) => ({
   ...(await importOriginal()),
   createEvent: (...args) => createEvent(...args),
 }));
+vi.mock("../services/universitiesApi", () => ({
+  listUniversities: async () => [
+    { id: 3, name: "Strathmore University", shortName: "SU" },
+    { id: 2, name: "Kenyatta University", shortName: "KU" },
+  ],
+}));
 vi.mock("../services/clubsApi", async (importOriginal) => ({
   ...(await importOriginal()),
   listClubs: (...args) => listClubs(...args),
@@ -35,8 +41,9 @@ function renderPage() {
 
 async function fillValidForm(user) {
   await user.type(screen.getByLabelText("Event name"), "Hack Night");
-  await user.selectOptions(screen.getByLabelText("Category"), "Technology");
+  await user.selectOptions(screen.getByLabelText("Category"), "Tech");
   await user.type(screen.getByLabelText("Description"), "Build things.");
+  await screen.findByRole("option", { name: "Strathmore University" });
   await user.selectOptions(screen.getByLabelText("University"), "Strathmore University");
   await screen.findByRole("option", { name: "Tech Society" });
   await user.selectOptions(screen.getByLabelText("Club"), "1");
@@ -50,7 +57,7 @@ describe("CreateEvent", () => {
     createEvent.mockReset();
     listClubs.mockReset();
     listClubs.mockResolvedValue([
-      { id: 1, name: "Tech Society", university: "Strathmore University" },
+      { id: 1, name: "Tech Society", universityId: 3 },
     ]);
   });
 
@@ -69,10 +76,11 @@ describe("CreateEvent", () => {
     const user = userEvent.setup();
     renderPage();
 
+    await screen.findByRole("option", { name: "Strathmore University" });
     await user.selectOptions(screen.getByLabelText("University"), "Strathmore University");
 
     expect(await screen.findByRole("option", { name: "Tech Society" })).toBeInTheDocument();
-    expect(listClubs).toHaveBeenCalledWith({ university: "Strathmore University" });
+    expect(listClubs).toHaveBeenCalledWith({ universityId: "3" });
   });
 
   it("shows a saving state, then goes to Browse on success", async () => {
@@ -88,7 +96,7 @@ describe("CreateEvent", () => {
 
     resolve({ id: 9, name: "Hack Night" });
     expect(await screen.findByText("Browse page: Hack Night")).toBeInTheDocument();
-    expect(createEvent.mock.calls[0][0]).toMatchObject({ clubId: "1", name: "Hack Night" });
+    expect(createEvent.mock.calls[0][0]).toMatchObject({ clubId: "1", universityId: "3", name: "Hack Night" });
   });
 
   it("shows server validation errors next to their fields", async () => {
@@ -96,10 +104,7 @@ describe("CreateEvent", () => {
     createEvent.mockRejectedValue(
       new ApiError("Validation failed", {
         status: 400,
-        fieldErrors: {
-          start_date: "Date must be in the future.",
-          club_id: "Club does not match university.",
-        },
+        fieldErrors: { start_at: "Date must be in the future.", club_id: "Club does not match university." },
       })
     );
     renderPage();

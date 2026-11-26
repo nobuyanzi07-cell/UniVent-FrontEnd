@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { listClubs } from "../services/clubsApi";
 
-// Loads clubs for one university. Pass an empty university to skip loading.
-export function useClubs(university) {
+// Loads clubs for one university id. Pass an empty id to skip loading.
+export function useClubs(universityId) {
   const [result, setResult] = useState({ key: null, clubs: [], error: null });
   const [reloadCount, setReloadCount] = useState(0);
 
-  const requestKey = `${university}|${reloadCount}`;
+  const requestKey = `${universityId}|${reloadCount}`;
 
   useEffect(() => {
-    if (!university) return;
+    if (!universityId) return;
     let cancelled = false;
 
-    listClubs({ university })
+    listClubs({ universityId })
       .then((clubs) => {
         if (!cancelled) setResult({ key: requestKey, clubs, error: null });
       })
@@ -23,11 +23,11 @@ export function useClubs(university) {
     return () => {
       cancelled = true;
     };
-  }, [university, requestKey]);
+  }, [universityId, requestKey]);
 
-  const loading = Boolean(university) && result.key !== requestKey;
+  const loading = Boolean(universityId) && result.key !== requestKey;
   const refetch = useCallback(() => setReloadCount((c) => c + 1), []);
-  const current = university && !loading;
+  const current = Boolean(universityId) && !loading;
 
   return {
     clubs: current ? result.clubs : [],

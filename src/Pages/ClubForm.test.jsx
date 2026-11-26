@@ -14,6 +14,13 @@ vi.mock("../services/clubsApi", async (importOriginal) => ({
   getClub: (...a) => api.getClub(...a),
 }));
 
+vi.mock("../services/universitiesApi", () => ({
+  listUniversities: async () => [
+    { id: 2, name: "Kenyatta University", shortName: "KU" },
+    { id: 3, name: "Strathmore University", shortName: "SU" },
+  ],
+}));
+
 function renderAt(path) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -28,7 +35,8 @@ function renderAt(path) {
 const club = {
   id: 3,
   name: "Chess Club",
-  university: "Kenyatta University",
+  universityId: 2,
+  universityName: "Kenyatta University",
   description: "We play chess.",
   contactEmail: "",
   logoUrl: "",
@@ -55,6 +63,7 @@ describe("ClubForm", () => {
     renderAt("/clubs/new");
 
     await user.type(screen.getByLabelText("Club name *"), "Chess Club");
+    await screen.findByRole("option", { name: "Kenyatta University" });
     await user.selectOptions(screen.getByLabelText("University *"), "Kenyatta University");
     await user.type(screen.getByLabelText("Description *"), "We play chess.");
     await user.click(screen.getByRole("button", { name: "Create club" }));
@@ -76,9 +85,10 @@ describe("ClubForm", () => {
     renderAt("/clubs/3/edit");
 
     expect(await screen.findByDisplayValue("Chess Club")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("Kenyatta University")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(api.updateClub).toHaveBeenCalledWith("3", expect.objectContaining({ name: "Chess Club" }));
+    expect(api.updateClub).toHaveBeenCalledWith("3", expect.objectContaining({ name: "Chess Club", universityId: "2" }));
     expect(await screen.findByText("A club with this name already exists.")).toBeInTheDocument();
     expect(screen.getByLabelText("Club name *")).toHaveAttribute("aria-invalid", "true");
   });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import ErrorMessage from "../Components/ErrorMessage.jsx";
 import Loader from "../Components/Loader.jsx";
-import { UNIVERSITIES } from "../constants/universities";
+import { useUniversities } from "../hooks/useUniversities";
 import {
   CLUB_FIELD_MAP,
   createClub,
@@ -14,11 +14,22 @@ import "./CreateEvent.css";
 
 const emptyClub = {
   name: "",
-  university: "",
+  universityId: "",
   description: "",
   contactEmail: "",
   logoUrl: "",
 };
+
+// A club from the API -> the values the form fields hold (all strings).
+function toFormValues(club) {
+  return {
+    name: club.name ?? "",
+    universityId: club.universityId ? String(club.universityId) : "",
+    description: club.description ?? "",
+    contactEmail: club.contactEmail ?? "",
+    logoUrl: club.logoUrl ?? "",
+  };
+}
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,10 +38,10 @@ function validate(form) {
   const errors = {};
 
   if (!form.name.trim()) errors.name = "Club name is required.";
-  else if (form.name.trim().length > 100) {
-    errors.name = "Club name must be 100 characters or fewer.";
+  else if (form.name.trim().length > 120) {
+    errors.name = "Club name must be 120 characters or fewer.";
   }
-  if (!form.university) errors.university = "Choose a university.";
+  if (!form.universityId) errors.universityId = "Choose a university.";
   if (!form.description.trim()) errors.description = "Add a short description.";
   if (form.contactEmail.trim() && !EMAIL_PATTERN.test(form.contactEmail.trim())) {
     errors.contactEmail = "Enter a valid email address.";
@@ -89,6 +100,12 @@ function useClub(id) {
 function ClubFormFields({ clubId, initialValues, successMessage }) {
   const navigate = useNavigate();
   const isEdit = Boolean(clubId);
+  const {
+    universities,
+    loading: universitiesLoading,
+    error: universitiesError,
+    refetch: refetchUniversities,
+  } = useUniversities();
 
   const [form, setForm] = useState(initialValues);
   const [showErrors, setShowErrors] = useState(false);
@@ -125,7 +142,7 @@ function ClubFormFields({ clubId, initialValues, successMessage }) {
     try {
       if (isEdit) {
         const updated = await updateClub(clubId, form);
-        setForm({ ...emptyClub, ...updated });
+        setForm(toFormValues(updated));
         setServerErrors({});
         setSuccess("Club saved.");
       } else {
@@ -189,15 +206,33 @@ function ClubFormFields({ clubId, initialValues, successMessage }) {
 
           <div className="form-field form-field-full">
             <label htmlFor="club-university">University *</label>
-            <select {...fieldProps("university", "club-university")}>
-              <option value="">Select a university</option>
-              {UNIVERSITIES.map((university) => (
-                <option key={university} value={university}>
-                  {university}
+            <select
+              {...fieldProps("universityId", "club-university")}
+              disabled={universitiesLoading || universities.length === 0}
+            >
+              <option value="">
+                {universitiesLoading
+                  ? "Loading universities…"
+                  : universitiesError
+                  ? "Could not load universities"
+                  : "Select a university"}
+              </option>
+              {universities.map((university) => (
+                <option key={university.id} value={String(university.id)}>
+                  {university.name}
                 </option>
               ))}
             </select>
-            <FieldError id="club-university-error" message={errors.university} />
+            <FieldError id="club-university-error" message={errors.universityId} />
+            {universitiesError && (
+              <button
+                type="button"
+                className="link-button"
+                onClick={refetchUniversities}
+              >
+                Try loading universities again
+              </button>
+            )}
           </div>
 
           <div className="form-field form-field-full">
@@ -299,7 +334,7 @@ function ClubForm() {
             // Re-mount the form when switching between clubs.
             key={id ?? "new"}
             clubId={id}
-            initialValues={club ? { ...emptyClub, ...club } : emptyClub}
+            initialValues={club ? toFormValues(club) : emptyClub}
             successMessage={location.state?.success}
           />
         )}

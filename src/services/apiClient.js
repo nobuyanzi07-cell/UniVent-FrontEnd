@@ -12,13 +12,16 @@ export class ApiError extends Error {
   }
 }
 
-// The API returns validation errors as { "errors": { "field": "message" } }.
-// We also accept a few other common shapes so the UI never crashes on them.
+// The UniVent API sends every error as
+//   { "error": { "status": 400, "message": "...", "fields": { "title": "Title is required" } } }
+// (see backend/app/errors.py). We also accept a flat { "errors": {...} } shape just in case.
 function readErrorBody(body) {
   if (!body || typeof body !== "object") return { message: null, fieldErrors: {} };
 
+  const err = body.error && typeof body.error === "object" ? body.error : body;
+  const raw = err.fields ?? err.errors ?? body.errors ?? {};
+
   const fieldErrors = {};
-  const raw = body.errors ?? body.field_errors ?? {};
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
     for (const [field, value] of Object.entries(raw)) {
       fieldErrors[field] = Array.isArray(value) ? value.join(" ") : String(value);
@@ -26,10 +29,10 @@ function readErrorBody(body) {
   }
 
   const message =
-    typeof body.error === "string"
+    typeof err.message === "string"
+      ? err.message
+      : typeof body.error === "string"
       ? body.error
-      : typeof body.message === "string"
-      ? body.message
       : null;
 
   return { message, fieldErrors };
@@ -51,7 +54,6 @@ export async function apiRequest(path, { method = "GET", body, params } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    // fetch only throws when the server can't be reached at all.
     throw new ApiError("We could not reach the server.", { status: 0 });
   }
 

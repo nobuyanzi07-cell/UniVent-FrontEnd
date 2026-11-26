@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { UNIVERSITIES } from "../constants/universities";
 import { useClubs } from "../hooks/useClubs";
+import { useUniversities } from "../hooks/useUniversities";
 import { createEvent, EVENT_FIELD_MAP } from "../services/eventsApi";
 import { mapFieldErrors } from "../services/formErrors";
 import "./CreateEvent.css";
@@ -9,7 +9,7 @@ import "./CreateEvent.css";
 const initialForm = {
   name: "",
   category: "",
-  university: "",
+  universityId: "",
   clubId: "",
   date: "",
   time: "",
@@ -20,14 +20,17 @@ const initialForm = {
   imageUrl: "",
 };
 
+// Same names as the backend seed data, so Browse's category filter stays tidy.
 const categories = [
   "Academic",
-  "Arts & Culture",
+  "Arts",
+  "Business",
   "Career",
   "Community",
-  "Sports",
-  "Technology",
+  "Music",
   "Social",
+  "Sports",
+  "Tech",
 ];
 
 function formatPreviewDate(date, time) {
@@ -60,7 +63,7 @@ function validate(form) {
 
   if (!form.name.trim()) errors.name = "Event name is required.";
   if (!form.category) errors.category = "Choose a category.";
-  if (!form.university) errors.university = "Choose a university.";
+  if (!form.universityId) errors.universityId = "Choose a university.";
   if (!form.clubId) errors.clubId = "Choose the club hosting this event.";
   if (!form.date) errors.date = "Choose an event date.";
   if (!form.venue.trim()) errors.venue = "Venue is required.";
@@ -92,11 +95,18 @@ function CreateEvent() {
   const [saving, setSaving] = useState(false);
 
   const {
+    universities,
+    loading: universitiesLoading,
+    error: universitiesError,
+    refetch: refetchUniversities,
+  } = useUniversities();
+
+  const {
     clubs,
     loading: clubsLoading,
     error: clubsError,
     refetch: refetchClubs,
-  } = useClubs(form.university);
+  } = useClubs(form.universityId);
 
   const clientErrors = useMemo(() => validate(form), [form]);
 
@@ -110,17 +120,17 @@ function CreateEvent() {
       ...previous,
       [name]: value,
       // A club belongs to one university, so changing university clears the club.
-      ...(name === "university" ? { clubId: "" } : {}),
+      ...(name === "universityId" ? { clubId: "" } : {}),
     }));
 
     // Editing a field clears the server's error for it.
     setServerErrors((previous) => {
-      if (!previous[name] && !(name === "university" && previous.clubId)) {
+      if (!previous[name] && !(name === "universityId" && previous.clubId)) {
         return previous;
       }
       const next = { ...previous };
       delete next[name];
-      if (name === "university") delete next.clubId;
+      if (name === "universityId") delete next.clubId;
       return next;
     });
   };
@@ -172,11 +182,14 @@ function CreateEvent() {
   });
 
   const selectedClub = clubs.find((club) => String(club.id) === form.clubId);
+  const selectedUniversity = universities.find(
+    (university) => String(university.id) === form.universityId
+  );
 
   const priceLabel = Number(form.price) > 0 ? `KES ${form.price}` : "Free";
 
   let clubPlaceholder = "Select a club";
-  if (!form.university) clubPlaceholder = "Choose a university first";
+  if (!form.universityId) clubPlaceholder = "Choose a university first";
   else if (clubsLoading) clubPlaceholder = "Loading clubs…";
   else if (clubsError) clubPlaceholder = "Could not load clubs";
   else if (clubs.length === 0) clubPlaceholder = "No clubs at this university yet";
@@ -292,20 +305,39 @@ function CreateEvent() {
                 <div className="form-field">
                   <label htmlFor="event-university">University</label>
 
-                  <select {...fieldProps("university", "event-university")}>
-                    <option value="">Select a university</option>
+                  <select
+                    {...fieldProps("universityId", "event-university")}
+                    disabled={universitiesLoading || universities.length === 0}
+                  >
+                    <option value="">
+                      {universitiesLoading
+                        ? "Loading universities…"
+                        : universitiesError
+                        ? "Could not load universities"
+                        : "Select a university"}
+                    </option>
 
-                    {UNIVERSITIES.map((university) => (
-                      <option key={university} value={university}>
-                        {university}
+                    {universities.map((university) => (
+                      <option key={university.id} value={String(university.id)}>
+                        {university.name}
                       </option>
                     ))}
                   </select>
 
                   <FieldError
                     id="event-university-error"
-                    message={errors.university}
+                    message={errors.universityId}
                   />
+
+                  {universitiesError && (
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={refetchUniversities}
+                    >
+                      Try loading universities again
+                    </button>
+                  )}
                 </div>
 
                 <div className="form-field">
@@ -313,7 +345,7 @@ function CreateEvent() {
 
                   <select
                     {...fieldProps("clubId", "event-club")}
-                    disabled={!form.university || clubsLoading || clubs.length === 0}
+                    disabled={!form.universityId || clubsLoading || clubs.length === 0}
                   >
                     <option value="">{clubPlaceholder}</option>
 
@@ -336,7 +368,7 @@ function CreateEvent() {
                     </button>
                   )}
 
-                  {form.university &&
+                  {form.universityId &&
                     !clubsLoading &&
                     !clubsError &&
                     clubs.length === 0 && (
@@ -496,7 +528,7 @@ function CreateEvent() {
               <h3>{form.name.trim() || "Your event name"}</h3>
 
               <p className="preview-meta">
-                {[selectedClub?.name, form.university]
+                {[selectedClub?.name, selectedUniversity?.name]
                   .filter(Boolean)
                   .join(" · ") || "Club and university"}
               </p>

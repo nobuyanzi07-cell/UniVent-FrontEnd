@@ -4,16 +4,25 @@ import { mockEvents } from "./mockEvents";
 // Set VITE_USE_MOCK=true to work on the UI without the Flask API running.
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
-// Backend (snake_case) -> the shape the UI components already use.
+// "2026-12-05T18:00:00" -> ["2026-12-05", "18:00:00"]
+function splitDateTime(value) {
+  if (!value) return [null, null];
+  const [date, time] = String(value).split("T");
+  return [date || null, time ? time.slice(0, 8) : null];
+}
+
+// Backend event (see Event.to_dict in backend/app/models.py) -> the shape
+// the UI components already use.
 export function mapEvent(e) {
-  const price = e.price ?? null;
+  const [startDate, startTime] = splitDateTime(e.start_at);
+  const price = e.price_kes ?? null;
   return {
     id: e.id,
-    name: e.name ?? "",
+    name: e.title ?? "",
     description: e.description ?? "",
     imageUrl: e.image_url ?? null,
-    startDate: e.start_date ?? null,
-    startTime: e.start_time ?? null,
+    startDate,
+    startTime,
     venueName: e.venue ?? "",
     city: e.city ?? "",
     country: "Kenya",
@@ -24,38 +33,41 @@ export function mapEvent(e) {
     currency: price === null ? null : "KES",
     category: e.category ?? null,
     ticketUrl: null,
-    university: e.university ?? "",
+    capacity: e.capacity ?? null,
     clubId: e.club_id ?? null,
     clubName: e.club?.name ?? "",
+    universityId: e.university_id ?? null,
+    universityName: e.university?.name ?? "",
   };
 }
 
 // Create Event form -> backend payload.
 export function toEventPayload(form) {
   return {
-    name: form.name.trim(),
+    title: form.name.trim(),
     category: form.category,
-    description: form.description.trim(),
-    start_date: form.date,
-    start_time: form.time || null,
+    description: form.description.trim() || null,
+    // The API stores one datetime; time defaults to midnight if left empty.
+    start_at: `${form.date}T${form.time || "00:00"}`,
     venue: form.venue.trim(),
     city: form.city.trim(),
-    price: form.price === "" ? 0 : Number(form.price),
+    price_kes: form.price === "" ? 0 : Number(form.price),
     image_url: form.imageUrl.trim() || null,
-    university: form.university,
+    university_id: form.universityId ? Number(form.universityId) : null,
     club_id: form.clubId ? Number(form.clubId) : null,
   };
 }
 
 // Backend field name -> Create Event form field name, used to place server errors.
 export const EVENT_FIELD_MAP = {
-  start_date: "date",
-  start_time: "time",
+  title: "name",
+  start_at: "date",
+  price_kes: "price",
   image_url: "imageUrl",
+  university_id: "universityId",
   club_id: "clubId",
 };
 
-// GET /api/events?q=...
 export async function searchEvents({ keyword } = {}) {
   if (USE_MOCK) {
     const k = keyword?.toLowerCase();
@@ -71,7 +83,6 @@ export async function searchEvents({ keyword } = {}) {
   return (Array.isArray(data) ? data : data?.events ?? []).map(mapEvent);
 }
 
-// GET /api/events/<id>
 export async function getEventById(id) {
   if (USE_MOCK) {
     const found = mockEvents.find((e) => e.id === id);
@@ -85,7 +96,6 @@ export async function getEventById(id) {
   return mapEvent(await apiRequest(`/api/events/${id}`));
 }
 
-// POST /api/events
 export async function createEvent(form) {
   const data = await apiRequest("/api/events", {
     method: "POST",

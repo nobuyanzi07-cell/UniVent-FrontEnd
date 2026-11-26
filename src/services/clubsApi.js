@@ -5,19 +5,20 @@ export function mapClub(c) {
   return {
     id: c.id,
     name: c.name ?? "",
-    university: c.university ?? "",
+    universityId: c.university_id ?? c.university?.id ?? null,
+    universityName: c.university?.name ?? "",
     description: c.description ?? "",
     contactEmail: c.contact_email ?? "",
     logoUrl: c.logo_url ?? "",
   };
 }
 
-// Frontend form -> backend payload
+// Club form -> backend payload. The form keeps the university id as a string.
 export function toClubPayload(form) {
   return {
     name: form.name.trim(),
-    university: form.university,
-    description: form.description.trim(),
+    university_id: form.universityId ? Number(form.universityId) : null,
+    description: form.description.trim() || null,
     contact_email: form.contactEmail.trim() || null,
     logo_url: form.logoUrl.trim() || null,
   };
@@ -25,13 +26,14 @@ export function toClubPayload(form) {
 
 // Backend field name -> form field name, used to place server errors.
 export const CLUB_FIELD_MAP = {
+  university_id: "universityId",
   contact_email: "contactEmail",
   logo_url: "logoUrl",
 };
 
-// GET /api/clubs?university=...
-export async function listClubs({ university } = {}) {
-  const data = await apiRequest("/api/clubs", { params: { university } });
+// GET /api/clubs?university=<id>
+export async function listClubs({ universityId } = {}) {
+  const data = await apiRequest("/api/clubs", { params: { university: universityId } });
   return (Array.isArray(data) ? data : data?.clubs ?? []).map(mapClub);
 }
 
