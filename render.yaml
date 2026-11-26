@@ -1,0 +1,30 @@
+# Render Blueprint (task #9): one web service + one PostgreSQL database.
+# Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: univent-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && flask --app wsgi db upgrade
+    startCommand: gunicorn wsgi:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: univent-db
+          property: connectionString
+      - key: FRONTEND_URLS
+        sync: false   # set in the dashboard, e.g. https://univent.vercel.app,http://localhost:5173
+      - key: TICKETMASTER_API_KEY
+        sync: false   # optional
+
+databases:
+  - name: univent-db
+    plan: free
+    databaseName: univent
