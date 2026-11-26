@@ -1,4 +1,4 @@
-  export function getErrorInfo(error) {
+export function getErrorInfo(error) {
   const status = error?.status;
 
   if (status === 404) {
