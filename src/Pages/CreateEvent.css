@@ -350,3 +350,71 @@
     flex-direction: column;
   }
 }
+
+/* ---- Saving, errors and club dropdown (P2-08, P2-17, P2-19) ---- */
+
+.form-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-fieldset:disabled {
+  opacity: 0.7;
+}
+
+.form-field select:disabled {
+  background: #f3f4f1;
+  cursor: not-allowed;
+}
+
+.form-error {
+  margin-top: 26px;
+  padding: 15px 16px;
+  border: 1px solid #e3bcbc;
+  border-radius: 12px;
+  background: #fbf0f0;
+  color: #7d2f2f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.form-submit:disabled,
+.secondary-action:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.link-button {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1f6146;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.field-hint {
+  color: #1f6146;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-page-narrow {
+  max-width: 760px;
+}
+
+.form-page-narrow .create-event-layout {
+  grid-template-columns: 1fr;
+}
+
+.link-as-button {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}

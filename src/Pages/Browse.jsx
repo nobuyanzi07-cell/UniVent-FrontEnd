@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import ErrorMessage from "../Components/ErrorMessage.jsx";
 import EventList from "../Components/EventList.jsx";
 import Filters from "../Components/Filters.jsx";
@@ -12,6 +13,7 @@ function Browse() {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState(defaultFilters);
   const { events, loading, error, refetch } = useEvents({ keyword: query });
+  const createdEvent = useLocation().state?.createdEvent;
 
   const setFilter = (key, value) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -62,6 +64,12 @@ function Browse() {
       <section className="browse" id="get-started">
         <p className="eyebrow">Your campus, your calendar</p>
         <h2>There’s more happening around you.</h2>
+        
+        {createdEvent && (
+          <p className="form-success" role="status">
+            <strong>“{createdEvent}” was published.</strong>
+          </p>
+        )}
 
         <SearchBar value={query} onChange={setQuery} />
         <Filters

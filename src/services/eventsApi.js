@@ -1,61 +1,74 @@
-import { mockEvents } from './mockEvents';
+import { apiRequest } from "./apiClient";
+import { mockEvents } from "./mockEvents";
 
-const BASE_URL = 'https://app.ticketmaster.com/discovery/v2';
-const API_KEY = import.meta.env.VITE_TM_API_KEY;
-const USE_MOCK = !API_KEY;
+// Set VITE_USE_MOCK=true to work on the UI without the Flask API running.
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
-function mapEvent(e) {
-  const venue = e._embedded?.venues?.[0];
-  const price = e.priceRanges?.[0];
-  const image =
-    e.images?.find((i) => i.ratio === '16_9' && i.width >= 500) ?? e.images?.[0];
-  const lat = venue?.location?.latitude;
-  const lng = venue?.location?.longitude;
+// "2026-12-05T18:00:00" -> ["2026-12-05", "18:00:00"]
+function splitDateTime(value) {
+  if (!value) return [null, null];
+  const [date, time] = String(value).split("T");
+  return [date || null, time ? time.slice(0, 8) : null];
+}
 
+// Backend event (see Event.to_dict in backend/app/models.py) -> the shape
+// the UI components already use.
+export function mapEvent(e) {
+  const [startDate, startTime] = splitDateTime(e.start_at);
+  const price = e.price_kes ?? null;
   return {
     id: e.id,
-    name: e.name,
-    description: e.info ?? e.pleaseNote ?? '',
-    imageUrl: image?.url ?? null,
-    startDate: e.dates?.start?.localDate ?? null,
-    startTime: e.dates?.start?.localTime ?? null,
-    venueName: venue?.name ?? '',
-    city: venue?.city?.name ?? '',
-    country: venue?.country?.name ?? '',
-    lat: lat ? Number(lat) : null,
-    lng: lng ? Number(lng) : null,
-    priceMin: price?.min ?? null,
-    priceMax: price?.max ?? null,
-    currency: price?.currency ?? null,
-    category: e.classifications?.[0]?.segment?.name ?? null,
-    ticketUrl: e.url ?? null,
+    name: e.title ?? "",
+    description: e.description ?? "",
+    imageUrl: e.image_url ?? null,
+    startDate,
+    startTime,
+    venueName: e.venue ?? "",
+    city: e.city ?? "",
+    country: "Kenya",
+    lat: null,
+    lng: null,
+    priceMin: price,
+    priceMax: price,
+    currency: price === null ? null : "KES",
+    category: e.category ?? null,
+    ticketUrl: null,
+    capacity: e.capacity ?? null,
+    clubId: e.club_id ?? null,
+    clubName: e.club?.name ?? "",
+    universityId: e.university_id ?? null,
+    universityName: e.university?.name ?? "",
   };
 }
 
-async function request(path, params = {}) {
-  const url = new URL(`${BASE_URL}${path}`);
-  url.searchParams.set('apikey', API_KEY);
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
-  });
-
-  let res;
-  try {
-    res = await fetch(url);
-  } catch {
-    const err = new Error('Network error');
-    err.status = 0;
-    throw err;
-  }
-  if (!res.ok) {
-    const err = new Error('Request failed');
-    err.status = res.status;
-    throw err;
-  }
-  return res.json();
+// Create Event form -> backend payload.
+export function toEventPayload(form) {
+  return {
+    title: form.name.trim(),
+    category: form.category,
+    description: form.description.trim() || null,
+    // The API stores one datetime; time defaults to midnight if left empty.
+    start_at: `${form.date}T${form.time || "00:00"}`,
+    venue: form.venue.trim(),
+    city: form.city.trim(),
+    price_kes: form.price === "" ? 0 : Number(form.price),
+    image_url: form.imageUrl.trim() || null,
+    university_id: form.universityId ? Number(form.universityId) : null,
+    club_id: form.clubId ? Number(form.clubId) : null,
+  };
 }
 
-export async function searchEvents({ keyword, city, page = 0, size = 20 } = {}) {
+// Backend field name -> Create Event form field name, used to place server errors.
+export const EVENT_FIELD_MAP = {
+  title: "name",
+  start_at: "date",
+  price_kes: "price",
+  image_url: "imageUrl",
+  university_id: "universityId",
+  club_id: "clubId",
+};
+
+export async function searchEvents({ keyword } = {}) {
   if (USE_MOCK) {
     const k = keyword?.toLowerCase();
     return mockEvents.filter(
@@ -66,20 +79,27 @@ export async function searchEvents({ keyword, city, page = 0, size = 20 } = {}) 
         e.venueName.toLowerCase().includes(k)
     );
   }
-  const data = await request('/events.json', { keyword, city, page, size });
-  return (data._embedded?.events ?? []).map(mapEvent);
+  const data = await apiRequest("/api/events", { params: { q: keyword } });
+  return (Array.isArray(data) ? data : data?.events ?? []).map(mapEvent);
 }
 
 export async function getEventById(id) {
   if (USE_MOCK) {
     const found = mockEvents.find((e) => e.id === id);
     if (!found) {
-      const err = new Error('Event not found');
+      const err = new Error("Event not found");
       err.status = 404;
       throw err;
     }
     return found;
   }
-  const data = await request(`/events/${id}.json`);
+  return mapEvent(await apiRequest(`/api/events/${id}`));
+}
+
+export async function createEvent(form) {
+  const data = await apiRequest("/api/events", {
+    method: "POST",
+    body: toEventPayload(form),
+  });
   return mapEvent(data);
 }
