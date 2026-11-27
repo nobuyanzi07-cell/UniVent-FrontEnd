@@ -35,3 +35,7 @@ coverage/
 *.tmp
 *.log
 *.zip
+
+# Python virtual environments and caches
+.venv/
+.pytest_cache/
