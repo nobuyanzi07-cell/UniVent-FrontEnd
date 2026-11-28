@@ -105,6 +105,18 @@ describe("API mode", () => {
     });
   });
 
+  it("also reads the { error: { message, fields } } shape", async () => {
+    mockFetch(400, {
+      error: { status: 400, message: "Check the form.", fields: { size: "Use 1 to 20" } },
+    });
+
+    await expect(searchEvents()).rejects.toMatchObject({
+      status: 400,
+      message: "Check the form.",
+      fields: { size: "Use 1 to 20" },
+    });
+  });
+
   it("turns a network failure into status 0", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fail")));
 
@@ -113,6 +125,14 @@ describe("API mode", () => {
 });
 
 describe("mock mode", () => {
+  it("filters mock events by club", async () => {
+    vi.stubEnv("VITE_USE_MOCK", "true");
+
+    const events = await searchEvents({ clubId: 1 });
+
+    expect(events.map((e) => e.id)).toEqual(["mock-1"]);
+  });
+
   it("uses the mock events when VITE_USE_MOCK is true", async () => {
     vi.stubEnv("VITE_USE_MOCK", "true");
     const fetchMock = mockFetch(200, []);

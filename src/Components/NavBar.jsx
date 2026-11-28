@@ -25,6 +25,7 @@ function NavBar() {
         <NavLink to="/" end onClick={handleBrowse}>
           Browse
         </NavLink>
+        <NavLink to="/clubs">Clubs</NavLink>
         <NavLink to="/saved">Saved</NavLink>
         <NavLink to="/create">Create</NavLink>
         <Link className="nav-action" to="/auth">

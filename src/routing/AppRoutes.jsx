@@ -5,6 +5,8 @@ import CreateEvent from "../Pages/CreateEvent.jsx";
 import EventDetails from "../Pages/EventDetails.jsx";
 import NotFound from "../Pages/NotFound.jsx";
 import SavedEvents from "../Pages/SavedEvents.jsx";
+import Clubs from "../Pages/Clubs.jsx";
+import ClubDetails from "../Pages/ClubDetails.jsx";
 
 function AppRoutes() {
   // React Router renders the matching page component for the current URL.
@@ -12,6 +14,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Browse />} />
       <Route path="/events/:id" element={<EventDetails />} />
+      <Route path="/clubs" element={<Clubs />} />
+      <Route path="/clubs/:id" element={<ClubDetails />} />
       <Route path="/saved" element={<SavedEvents />} />
       <Route path="/create" element={<CreateEvent />} />
       <Route path="/auth" element={<Auth />} />

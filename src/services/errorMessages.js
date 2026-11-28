@@ -1,10 +1,11 @@
-export function getErrorInfo(error) {
+export function getErrorInfo(error, resource = 'event') {
   const status = error?.status;
 
   if (status === 404) {
+    const article = /^[aeiou]/.test(resource) ? 'an' : 'a';
     return {
-      title: 'Event not found',
-      message: "We couldn't find an event with that ID.",
+      title: `${resource.charAt(0).toUpperCase()}${resource.slice(1)} not found`,
+      message: `We couldn't find ${article} ${resource} with that ID.`,
       canRetry: false,
     };
   }
