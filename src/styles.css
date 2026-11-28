@@ -496,3 +496,25 @@ html { scroll-behavior: smooth; }
 .auth-note { margin: 16px 0 0; color: var(--muted); font-size: 13px; }
 .auth-switch { margin: 12px 0 0; font-size: 14px; }
 .auth-switch button { padding: 0; border: 0; background: none; color: var(--green); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+.clubs-page, .club-details { max-width: 1080px; margin: 0 auto; padding: 48px 0 72px; }
+.clubs-header h1 { margin: 0 0 8px; font-family: "Manrope", sans-serif; font-size: clamp(30px, 4vw, 44px); letter-spacing: -1px; }
+.clubs-header p { margin: 0 0 24px; color: var(--muted); }
+.club-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.club-card { display: flex; flex-direction: column; gap: 14px; padding: 20px; background: #fff; border: 1px solid #e8eae4; border-radius: 12px; }
+.club-card-head { display: flex; gap: 14px; align-items: center; }
+.club-card h3 { margin: 6px 0 0; font-size: 18px; }
+.club-card h3 a { text-decoration: none; color: inherit; }
+.club-card h3 a:hover { color: var(--green); }
+.club-desc { margin: 0; color: var(--ink); line-height: 1.6; flex: 1; }
+.club-card .btn { align-self: flex-start; }
+.club-logo { flex: none; width: 52px; height: 52px; border-radius: 12px; object-fit: cover; }
+.club-logo.large { width: 76px; height: 76px; border-radius: 16px; }
+.club-logo.placeholder { display: inline-flex; align-items: center; justify-content: center; background: #edf1e8; color: var(--green); font-family: "Manrope", sans-serif; font-weight: 800; font-size: 22px; }
+.club-logo.large.placeholder { font-size: 32px; }
+.club-details-header { display: flex; gap: 20px; align-items: center; margin: 4px 0 20px; }
+.club-details-header h1 { margin: 8px 0 0; font-family: "Manrope", sans-serif; font-size: clamp(28px, 4vw, 40px); letter-spacing: -1px; }
+.club-contact { margin: 0 0 32px; }
+.club-contact a { color: var(--green); font-weight: 700; }
+.club-events h2 { margin: 0 0 16px; font-size: 22px; }
+

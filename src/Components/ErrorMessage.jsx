@@ -1,10 +1,10 @@
-function ErrorMessage({ error, onRetry }) {
+function ErrorMessage({ error, onRetry, what = "events" }) {
   const message =
     error?.status === 0
       ? "Network error. Check your connection and try again."
       : error?.status === 404
       ? "We couldn't find that."
-      : "Something went wrong loading events.";
+      : `Something went wrong loading ${what}.`;
 
   return (
     <div className="error-message" role="alert">

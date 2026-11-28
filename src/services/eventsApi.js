@@ -1,4 +1,5 @@
 import { apiRequest, isMockMode } from './apiClient';
+import { mockClubEventIds } from './mockClubs';
 import { mockEvents } from './mockEvents';
 
 // "18:00" -> "18:00:00" so every event has the same time format
@@ -35,21 +36,25 @@ export function mapApiEvent(e) {
   };
 }
 
-function searchMock({ keyword }) {
+function searchMock({ keyword, clubId }) {
   const k = keyword?.toLowerCase();
+  const clubEventIds =
+    clubId == null ? null : (mockClubEventIds[String(clubId)] ?? []);
+
   return mockEvents.filter(
     (e) =>
-      !k ||
-      e.name.toLowerCase().includes(k) ||
-      e.description.toLowerCase().includes(k) ||
-      e.venueName.toLowerCase().includes(k)
+      (!clubEventIds || clubEventIds.includes(e.id)) &&
+      (!k ||
+        e.name.toLowerCase().includes(k) ||
+        e.description.toLowerCase().includes(k) ||
+        e.venueName.toLowerCase().includes(k))
   );
 }
 
 // keyword -> ?q=, university -> ?university=, clubId -> ?club_id=
 // Category, free-only and sorting are done in the Browse page.
 export async function searchEvents({ keyword, university, clubId } = {}) {
-  if (isMockMode()) return searchMock({ keyword });
+  if (isMockMode()) return searchMock({ keyword, clubId });
 
   const data = await apiRequest('/api/events', {
     params: { q: keyword, university, club_id: clubId },

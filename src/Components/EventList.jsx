@@ -1,8 +1,11 @@
 import EventCard from "./EventCard.jsx";
 
-function EventList({ events }) {
+function EventList({
+  events,
+  emptyMessage = "No events match your search or filters.",
+}) {
   if (events.length === 0) {
-    return <p className="empty">No events match your search or filters.</p>;
+    return <p className="empty">{emptyMessage}</p>;
   }
 
   return (

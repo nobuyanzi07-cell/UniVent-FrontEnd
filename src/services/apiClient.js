@@ -23,6 +23,7 @@ function buildUrl(path, params = {}) {
 // Error bodies from the API:
 //   400  { "errors": { "name": "Name is required." } }
 //   else { "error": "Club not found." }
+//   or   { "error": { "status": 400, "message": "...", "fields": { ... } } }
 // Thrown errors carry .status (read by getErrorInfo), .message and .fields.
 function toError(res, data) {
   const err = new Error('Request failed');
@@ -31,7 +32,12 @@ function toError(res, data) {
 
   if (data && typeof data === 'object') {
     if (data.errors && typeof data.errors === 'object') err.fields = data.errors;
-    if (typeof data.error === 'string') err.message = data.error;
+    if (typeof data.error === 'string') {
+      err.message = data.error;
+    } else if (data.error && typeof data.error === 'object') {
+      err.message = data.error.message ?? err.message;
+      err.fields = data.error.fields ?? err.fields;
+    }
   }
   if (res.status === 400 && err.message === 'Request failed') {
     err.message = 'Please fix the highlighted fields.';
