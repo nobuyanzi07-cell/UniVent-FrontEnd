@@ -1,6 +1,8 @@
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSavedEvents } from "../context/SavedEventsContext.jsx";
 import { useEvent } from "../hooks/useEvent";
+import { deleteEvent } from "../services/eventsApi";
 import { getErrorInfo } from "../services/errorMessages";
 
 function formatDate(date, time) {
@@ -35,8 +37,12 @@ function getMapUrl(event) {
 
 function EventDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { event, loading, error, refetch } = useEvent(id);
   const { isSaved, toggleSaved } = useSavedEvents();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   if (loading) {
     return (
@@ -68,6 +74,19 @@ function EventDetails() {
 
   const mapUrl = getMapUrl(event);
   const saved = isSaved(event.id);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteEvent(event.id);
+      if (saved) toggleSaved(event);
+      navigate("/");
+    } catch (err) {
+      setDeleteError(getErrorInfo(err).message);
+      setDeleting(false);
+    }
+  };
 
   return (
     <article className="details-page">
@@ -138,7 +157,48 @@ function EventDetails() {
             View on map
           </a>
         )}
+        {!confirming && (
+          <button
+            type="button"
+            className="details-btn danger"
+            onClick={() => setConfirming(true)}
+          >
+            Delete event
+          </button>
+        )}
       </div>
+
+      {confirming && (
+        <div role="group" aria-label="Confirm delete" className="delete-confirm">
+          <p>Delete this event? This can't be undone.</p>
+          <div className="details-actions">
+            <button
+              type="button"
+              className="details-btn danger"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Yes, delete"}
+            </button>
+            <button
+              type="button"
+              className="details-btn ghost"
+              onClick={() => {
+                setConfirming(false);
+                setDeleteError(null);
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+          </div>
+          {deleteError && (
+            <p role="alert" className="delete-error">
+              {deleteError}
+            </p>
+          )}
+        </div>
+      )}
     </article>
   );
 }

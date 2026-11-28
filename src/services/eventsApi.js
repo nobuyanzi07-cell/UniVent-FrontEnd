@@ -76,3 +76,9 @@ export async function getEventById(id) {
   const data = await apiRequest(`/api/events/${encodeURIComponent(id)}`);
   return mapApiEvent(data);
 }
+
+
+export async function deleteEvent(id) {
+  if (isMockMode()) return;
+  await apiRequest(`/api/events/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
