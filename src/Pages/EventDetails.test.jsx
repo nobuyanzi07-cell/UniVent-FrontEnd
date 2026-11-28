@@ -3,9 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SavedEventsProvider } from "../context/SavedEventsContext.jsx";
+import { deleteEvent } from "../services/eventsApi";
 import EventDetails from "./EventDetails.jsx";
 
 vi.mock("../services/eventsApi", () => ({
+  deleteEvent: vi.fn(async () => {}),
   getEventById: vi.fn(async (id) => {
     if (id !== "test-1") {
       const err = new Error("Event not found");
@@ -38,6 +40,7 @@ function renderDetails(path) {
     <MemoryRouter initialEntries={[path]}>
       <SavedEventsProvider>
         <Routes>
+          <Route path="/" element={<p>Browse page</p>} />
           <Route path="/events/:id" element={<EventDetails />} />
         </Routes>
       </SavedEventsProvider>
@@ -46,7 +49,10 @@ function renderDetails(path) {
 }
 
 describe("EventDetails page", () => {
-  beforeEach(() => window.localStorage.clear());
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.clearAllMocks();
+  });
 
   it("shows the event and toggles Save", async () => {
     renderDetails("/events/test-1");
@@ -67,5 +73,43 @@ describe("EventDetails page", () => {
     renderDetails("/events/nope");
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /back to browse/i })).toBeInTheDocument();
+  });
+
+  it("asks for confirmation, then deletes and returns to Browse", async () => {
+    renderDetails("/events/test-1");
+    await userEvent.click(
+      await screen.findByRole("button", { name: /delete event/i })
+    );
+    expect(deleteEvent).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: /yes, delete/i }));
+    expect(deleteEvent).toHaveBeenCalledWith("test-1");
+    expect(await screen.findByText("Browse page")).toBeInTheDocument();
+  });
+
+  it("cancel keeps the event", async () => {
+    renderDetails("/events/test-1");
+    await userEvent.click(
+      await screen.findByRole("button", { name: /delete event/i })
+    );
+    await userEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+    expect(deleteEvent).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Test Event" })).toBeInTheDocument();
+    expect(screen.queryByText(/can't be undone/i)).not.toBeInTheDocument();
+  });
+
+  it("shows an error and stays put when the delete fails", async () => {
+    deleteEvent.mockRejectedValueOnce(
+      Object.assign(new Error("Event not found"), { status: 404 })
+    );
+    renderDetails("/events/test-1");
+    await userEvent.click(
+      await screen.findByRole("button", { name: /delete event/i })
+    );
+    await userEvent.click(screen.getByRole("button", { name: /yes, delete/i }));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Test Event" })).toBeInTheDocument();
   });
 });
